@@ -22,6 +22,6 @@ A chore counts as **done** when the repo's own tests pass *and* a hidden accepta
 | `test-parse-amount` | [done](20261024-113339-test-parse-amount-minimax-m3.1-flash/MORNING_REPORT.md) · 25s · $0.0057 | [done](20261024-113332-test-parse-amount-deepseek-v4-flash/MORNING_REPORT.md) · 6s · $0.0012 | [done](20261024-113404-test-parse-amount-qwen3-235b/MORNING_REPORT.md) · 13s · $0.0057 | [done](20261024-113418-test-parse-amount-gpt-oss-120b/MORNING_REPORT.md) · 11s · $0.0130 |
 | `utcnow-deprecation` | [done](20261024-114101-utcnow-deprecation-minimax-m3.1-flash/MORNING_REPORT.md) · 1m 52s · $0.0197 | [partial](20261024-112721-utcnow-deprecation-deepseek-v4-flash/MORNING_REPORT.md) · 8s · $0.0013 | [partial](20261024-113300-utcnow-deprecation-qwen3-235b/MORNING_REPORT.md) · 19s · $0.0113 | [failed](20261024-113319-utcnow-deprecation-gpt-oss-120b/MORNING_REPORT.md) · 12s · $0.0138 |
 
-The 24 runs on this page cost **$0.3907** in total. The spend ledger (every model call made with this ledger, including smoke tests and discarded runs) stands at **$0.4468** of a $3.00 cap.
+The 24 runs on this page cost **$0.3907** in total. The spend ledger (every model call made with this ledger, including smoke tests and discarded runs) stands at **$0.4501** of a $3.00 cap.
 
 Legend: **done** = tests green and hidden check passes; **partial** = tests green but the hidden check fails; **failed** = no change, or tests red.
