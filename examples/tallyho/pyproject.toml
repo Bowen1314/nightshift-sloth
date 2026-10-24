@@ -1,0 +1,9 @@
+[project]
+name = "tallyho"
+version = "0.3.1"
+description = "A tiny expense ledger for your terminal"
+requires-python = ">=3.11"
+license = "MIT"
+
+[project.scripts]
+tally = "tally.cli:main"

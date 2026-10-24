@@ -1,0 +1,55 @@
+diff --git a/tally/ledger.py b/tally/ledger.py
+index 1642949..2dde58a 100644
+--- a/tally/ledger.py
++++ b/tally/ledger.py
+@@ -6,13 +6,18 @@
+ import json
+ import os
+ from dataclasses import dataclass
+-from datetime import datetime
++from datetime import datetime, timezone
+ from decimal import Decimal
+ from pathlib import Path
+ 
+ DEFAULT_FILE = Path.home() / ".tallyho.json"
+ 
+ 
++def as_utc(when: datetime) -> datetime:
++    """Old ledgers stored naive UTC timestamps; treat them as UTC."""
++    return when.replace(tzinfo=timezone.utc) if when.tzinfo is None else when.astimezone(timezone.utc)
++
++
+ def ledger_path() -> Path:
+     return Path(os.environ.get("TALLY_FILE", DEFAULT_FILE))
+ 
+@@ -35,7 +40,7 @@ class Entry:
+     @classmethod
+     def from_json(cls, data: dict) -> "Entry":
+         return cls(
+-            when=datetime.fromisoformat(data["when"]),
++            when=as_utc(datetime.fromisoformat(data["when"])),
+             amount=Decimal(data["amount"]),
+             category=data["category"],
+             note=data.get("note", ""),
+@@ -59,7 +64,7 @@ def save(entries: list[Entry], path: Path | None = None) -> None:
+ 
+ def add(amount: Decimal, category: str, note: str = "", when: datetime | None = None, path: Path | None = None) -> Entry:
+     entry = Entry(
+-        when=when or datetime.utcnow(),
++        when=as_utc(when) if when else datetime.now(timezone.utc),
+         amount=amount,
+         category=category.strip().lower(),
+         note=note.strip(),
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 6d82bca..de53b8b 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -42,7 +42,7 @@ class CliTest(unittest.TestCase):
+         code, text = self.run_cli("export")
+         self.assertEqual(code, 0)
+         self.assertEqual(text.splitlines()[0], "when,amount,category,note")
+-        self.assertIn("2026-10-01T00:00:00,4.50,coffee,", text)
++        self.assertIn("2026-10-01T00:00:00+00:00,4.50,coffee,", text)
+ 
+ 
+ if __name__ == "__main__":

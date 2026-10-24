@@ -1,0 +1,19 @@
+diff --git a/README.md b/README.md
+index 35b7dd2..4d254b2 100644
+--- a/README.md
++++ b/README.md
+@@ -13,9 +13,11 @@ Or run it straight from a checkout with `python -m tally`.
+ ## Usage
+ 
+ ```sh
+-tally add 4.50 --category coffee
+-tally list
+-tally report
++tally add AMOUNT CATEGORY [--note NOTE] [--date YYYY-MM-DD]   # record an expense (negative = refund)
++tally list [-n/--limit N]                                     # most recent entries (default 10)
++tally report [--month YYYY-MM]                                # totals by category
++tally export [-o/--output FILE]                               # all entries as CSV (default: stdout)
++tally --version
+ ```
+ 
+ Entries live in `~/.tallyho.json`. Set `TALLY_FILE` to use a different file.

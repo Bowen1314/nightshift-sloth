@@ -1,0 +1,74 @@
+diff --git a/tally/cli.py b/tally/cli.py
+index 6924e6c..5532412 100644
+--- a/tally/cli.py
++++ b/tally/cli.py
+@@ -7,7 +7,7 @@ from datetime import datetime
+ 
+ from . import __version__, ledger
+ from .money import format_amount, parse_amount
+-from .report import render
++from .report import render, render_json
+ 
+ 
+ def build_parser() -> argparse.ArgumentParser:
+@@ -26,6 +26,7 @@ def build_parser() -> argparse.ArgumentParser:
+ 
+     rep = sub.add_parser("report", help="totals by category")
+     rep.add_argument("--month", help="only this month, YYYY-MM")
++    rep.add_argument("--json", action="store_true", help="machine-readable output")
+ 
+     exp = sub.add_parser("export", help="write all entries as CSV")
+     exp.add_argument("-o", "--output", help="file to write (default: stdout)")
+@@ -55,7 +56,7 @@ def main(argv: list[str] | None = None) -> int:
+         return 0
+ 
+     if args.command == "report":
+-        print(render(entries, args.month))
++        print(render_json(entries, args.month) if args.json else render(entries, args.month))
+         return 0
+ 
+     if args.command == "export":
+diff --git a/tally/report.py b/tally/report.py
+index f7ca91e..361bf32 100644
+--- a/tally/report.py
++++ b/tally/report.py
+@@ -1,5 +1,6 @@
+ """Monthly and all-time totals by category."""
+ 
++import json
+ from decimal import Decimal
+ 
+ from .ledger import Entry
+@@ -37,3 +38,15 @@ def render(entries: list[Entry], month: str | None = None) -> str:
+         f"  {len(entries)} entries, average {format_amount(average)}",
+     ]
+     return "\n".join(lines)
++
++
++def render_json(entries: list[Entry], month: str | None = None) -> str:
++    entries = entries_for_month(entries, month)
++    totals = calcualte_totals(entries)
++    grand = sum(totals.values(), Decimal("0"))
++    return json.dumps({
++        "month": month,
++        "count": len(entries),
++        "total": str(grand.quantize(CENT)),
++        "by_category": {c: str(a.quantize(CENT)) for c, a in totals.items()},
++    })
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 6d82bca..7e014ae 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -44,6 +44,12 @@ class CliTest(unittest.TestCase):
+         self.assertEqual(text.splitlines()[0], "when,amount,category,note")
+         self.assertIn("2026-10-01T00:00:00,4.50,coffee,", text)
+ 
++    def test_report_json(self):
++        import json
++        self.run_cli("add", "4.50", "coffee")
++        code, text = self.run_cli("report", "--json")
++        self.assertEqual(json.loads(text)["total"], "4.50")
++
+ 
+ if __name__ == "__main__":
+     unittest.main()

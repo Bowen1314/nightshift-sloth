@@ -1,0 +1,31 @@
+diff --git a/tally/report.py b/tally/report.py
+index f7ca91e..b786486 100644
+--- a/tally/report.py
++++ b/tally/report.py
+@@ -22,9 +22,10 @@ def calcualte_totals(entries: list[Entry]) -> dict[str, Decimal]:
+ 
+ def render(entries: list[Entry], month: str | None = None) -> str:
+     entries = sorted(entries_for_month(entries, month), key=lambda e: e.when)
++    if not entries:
++        return "No entries yet."
+     totals = calcualte_totals(entries)
+     grand = sum(totals.values(), Decimal("0"))
+-    # TODO: blows up with a traceback on a fresh install (empty ledger).
+     average = (grand / len(entries)).quantize(CENT)
+     width = max(len(category) for category in totals)
+     lines = [f"tallyho report: {month or 'all time'}", ""]
+diff --git a/tests/test_report.py b/tests/test_report.py
+index 4317dbe..ae80670 100644
+--- a/tests/test_report.py
++++ b/tests/test_report.py
+@@ -35,6 +35,10 @@ class ReportTest(unittest.TestCase):
+         self.assertIn("total", text)
+         self.assertIn("3 entries, average $23.47", text)
+ 
++    def test_empty_ledger(self):
++        self.assertEqual(render([]), "No entries yet.")
++        self.assertEqual(render(ENTRIES, "2026-01"), "No entries yet.")
++
+ 
+ if __name__ == "__main__":
+     unittest.main()

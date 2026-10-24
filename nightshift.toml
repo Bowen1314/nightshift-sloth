@@ -1,0 +1,56 @@
+# nightshift-sloth configuration. No secrets here: the provider key is read
+# from the environment variable named in [provider].key_env (or --key-file).
+
+[rcli]
+# Backboard R-CLI built from source (see README: the released binary at the
+# time of writing had no custom-provider support). NIGHTSHIFT_RCLI overrides.
+binary = "backboard"
+
+[provider]
+id = "nebius"
+name = "Nebius Token Factory"
+base_url = "https://api.tokenfactory.nebius.com/v1"
+key_env = "NEBIUS_API_KEY"
+
+[budget]
+total_usd = 3.00     # the ledger refuses to start a run that could cross this
+per_run_usd = 0.25   # a run is killed the moment its metered cost reaches this
+
+[night]
+timer = 600          # seconds handed to R-CLI's --timer (advisory, for the model)
+grace = 120          # hard kill at timer + grace (enforced by nightshift-sloth)
+default_model = "deepseek-v4-flash"
+# state_dir = "~/.nightshift-sloth"   # worktrees, throwaway HOMEs, default reports
+
+# Open-weight models with tool calling on Nebius Token Factory.
+# Prices are not configured: they are fetched live from /v1/models at run time.
+
+[[models]]
+alias = "deepseek-v4-flash"
+id = "deepseek-ai/DeepSeek-V4-Flash-0731"
+context_limit = 131072
+max_output_tokens = 32768
+
+[[models]]
+alias = "minimax-m3.1-flash"
+id = "MiniMaxAI/MiniMax-M3.1-Flash"
+context_limit = 131072
+max_output_tokens = 32768
+
+[[models]]
+alias = "glm-5.3-flash"
+id = "zai-org/GLM-5.3-Flash"
+context_limit = 131072
+max_output_tokens = 32768
+
+[[models]]
+alias = "qwen3-235b"
+id = "Qwen/Qwen3-235B-A22B-Instruct-2507"
+context_limit = 131072
+max_output_tokens = 16384
+
+[[models]]
+alias = "gpt-oss-120b"
+id = "openai/gpt-oss-120b"
+context_limit = 131072
+max_output_tokens = 32768

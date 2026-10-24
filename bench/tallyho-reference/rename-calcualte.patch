@@ -1,0 +1,58 @@
+diff --git a/tally/report.py b/tally/report.py
+index f7ca91e..ca1922f 100644
+--- a/tally/report.py
++++ b/tally/report.py
+@@ -1,5 +1,6 @@
+ """Monthly and all-time totals by category."""
+ 
++import warnings
+ from decimal import Decimal
+ 
+ from .ledger import Entry
+@@ -13,16 +14,22 @@ def entries_for_month(entries: list[Entry], month: str | None) -> list[Entry]:
+     return [e for e in entries if e.when.strftime("%Y-%m") == month]
+ 
+ 
+-def calcualte_totals(entries: list[Entry]) -> dict[str, Decimal]:
++def calculate_totals(entries: list[Entry]) -> dict[str, Decimal]:
+     totals: dict[str, Decimal] = {}
+     for entry in entries:
+         totals[entry.category] = totals.get(entry.category, Decimal("0")) + entry.amount
+     return dict(sorted(totals.items(), key=lambda kv: (-kv[1], kv[0])))
+ 
+ 
++def calcualte_totals(entries: list[Entry]) -> dict[str, Decimal]:
++    """Deprecated misspelling kept for plugins. Use calculate_totals()."""
++    warnings.warn("calcualte_totals() is deprecated; use calculate_totals()", DeprecationWarning, stacklevel=2)
++    return calculate_totals(entries)
++
++
+ def render(entries: list[Entry], month: str | None = None) -> str:
+     entries = sorted(entries_for_month(entries, month), key=lambda e: e.when)
+-    totals = calcualte_totals(entries)
++    totals = calculate_totals(entries)
+     grand = sum(totals.values(), Decimal("0"))
+     # TODO: blows up with a traceback on a fresh install (empty ledger).
+     average = (grand / len(entries)).quantize(CENT)
+diff --git a/tests/test_report.py b/tests/test_report.py
+index 4317dbe..c027032 100644
+--- a/tests/test_report.py
++++ b/tests/test_report.py
+@@ -3,7 +3,7 @@ from datetime import datetime
+ from decimal import Decimal
+ 
+ from tally.ledger import Entry
+-from tally.report import calcualte_totals, entries_for_month, render
++from tally.report import calculate_totals, entries_for_month, render
+ 
+ 
+ def entry(day, amount, category, month=10):
+@@ -20,7 +20,7 @@ ENTRIES = [
+ 
+ class ReportTest(unittest.TestCase):
+     def test_totals_are_sorted_biggest_first(self):
+-        totals = calcualte_totals(ENTRIES)
++        totals = calculate_totals(ENTRIES)
+         self.assertEqual(list(totals), ["rent", "groceries", "coffee"])
+         self.assertEqual(totals["coffee"], Decimal("8.30"))
+ 

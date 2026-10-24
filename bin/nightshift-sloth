@@ -1,0 +1,4 @@
+#!/bin/sh
+# Run nightshift-sloth from a checkout: bin/nightshift-sloth night --repo ~/code/myapp
+here="$(cd "$(dirname "$0")/.." && pwd)"
+PYTHONPATH="$here${PYTHONPATH:+:$PYTHONPATH}" exec python3 -m nightshift_sloth "$@"
