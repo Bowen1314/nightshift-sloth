@@ -1,0 +1,76 @@
+{
+  "run_id": "20261024-112545-fix-empty-report-qwen3-235b",
+  "date": "2026-10-24 11:26",
+  "repo": "tallyho",
+  "chore": {
+    "id": "fix-empty-report",
+    "text": "`tally report` crashes with a traceback on a fresh install, because the ledger is empty\n(see the TODO in `tally/report.py`). The same happens when `--month` matches no entries. In both cases it should\nprint `No entries yet.` and exit 0. Add a regression test."
+  },
+  "branch": "sloth/fix-empty-report/20261024-112545-qwen3-235b",
+  "base": {
+    "ref": "main",
+    "sha": "d5bfc0f79cca72066e6f794512365beb85196e0d"
+  },
+  "commit": "4edce9b72931d74ad7aab04dd34f65848354dd77",
+  "agent": "Backboard R-CLI 3.0.4 (built from source @ 51bee17)",
+  "model": {
+    "alias": "qwen3-235b",
+    "id": "Qwen/Qwen3-235B-A22B-Instruct-2507",
+    "price": "$0.20 in, $0.60 out per 1M tokens"
+  },
+  "timer": 600,
+  "grace": 120,
+  "per_run_cap_usd": 0.25,
+  "stats": {
+    "exit_code": 0,
+    "stopped_by": "agent finished",
+    "wall_seconds": 16.7,
+    "model_calls": 9,
+    "prompt_tokens": 62161,
+    "cached_tokens": 56144,
+    "completion_tokens": 1004,
+    "usd": 0.0130346,
+    "tool_calls": {
+      "todo_write": 2,
+      "glob": 2,
+      "read": 2,
+      "grep": 1,
+      "edit": 1,
+      "write": 1,
+      "execute": 1
+    },
+    "commands": [
+      "python3 -m unittest discover -s tests"
+    ],
+    "final_message": "Fixed `tally report` to print \"No entries yet.\" and exit cleanly when the ledger is empty or no entries match the given month. Added two regression tests in `tests/test_report.py` to verify both cases. The full test suite passes. No further work is needed.",
+    "errors": [],
+    "warnings": [],
+    "turn_status": "completed",
+    "session_id": "sess_5756f3cb",
+    "tool_errors": 0
+  },
+  "tests_before": {
+    "ok": true,
+    "summary": "Ran 12 tests in 0.007s \u00b7 OK",
+    "seconds": 0.1,
+    "tail": "$WORKTREE/tally/ledger.py:62: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).\n  when=when or datetime.utcnow(),\n............\n----------------------------------------------------------------------\nRan 12 tests in 0.007s\nOK"
+  },
+  "tests_after": {
+    "ok": true,
+    "summary": "Ran 14 tests in 0.007s \u00b7 OK",
+    "seconds": 0.1,
+    "tail": "$WORKTREE/tally/ledger.py:62: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).\n  when=when or datetime.utcnow(),\n..............\n----------------------------------------------------------------------\nRan 14 tests in 0.007s\nOK"
+  },
+  "diff": {
+    "files": 2,
+    "added": 8,
+    "removed": 1,
+    "stat": " tally/report.py      | 3 ++-\n tests/test_report.py | 6 ++++++\n 2 files changed, 8 insertions(+), 1 deletion(-)"
+  },
+  "acceptance": {
+    "ok": true,
+    "output": "ok   report on a missing/empty ledger exits 0 without a traceback\nok   report on an empty ledger prints 'No entries yet.'\nok   report on a ledger file containing [] prints 'No entries yet.'\nok   report --month with no matching entries prints 'No entries yet.'\nok   a non-empty report is unchanged\nok   a regression test mentions 'No entries yet'\nok   the repo's own test suite passes\n\nACCEPTED"
+  },
+  "verdict": "READY FOR REVIEW",
+  "ledger_total_usd": 0.04423
+}

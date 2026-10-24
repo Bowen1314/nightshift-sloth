@@ -1,4 +1,4 @@
-"""One night, one chore: worktree -> R-CLI -> tests -> local commit -> report."""
+"""One night, one chore: private clone -> R-CLI -> tests -> local commit -> branch back -> report."""
 
 from __future__ import annotations
 
@@ -129,8 +129,7 @@ def run_night(
 
     base_ref = cfg.base or gitops.head_branch(repo)
     base_sha = gitops.rev(repo, base_ref)
-    gitops.exclude_backboard_dir(repo)
-    gitops.add_worktree(repo, worktree, branch, base_sha)
+    gitops.add_workspace(repo, worktree, branch, base_sha)
 
     print(f"[sloth] {run_id}: tests before ...", flush=True)
     tests_before = run_tests(worktree, test_cmd, home, tmp)
@@ -166,12 +165,17 @@ def run_night(
         events_path=run_dir / "events.jsonl",
         stderr_path=run_dir / "rcli.stderr.txt",
     )
-    redact = Redactor(api_key, worktree, home, tmp)
+    redact = Redactor(api_key, worktree, home, tmp, state)
     copy_session_transcript(worktree, run_dir / "transcript.jsonl", redact)
-    (run_dir / "rcli.stderr.txt").write_text(redact((run_dir / "rcli.stderr.txt").read_text(errors="replace")))
+    for name in ("rcli.stderr.txt", "events.jsonl"):
+        f = run_dir / name
+        if f.exists():
+            f.write_text(redact(f.read_text(errors="replace")))
+    tests_before.tail = redact(tests_before.tail)
 
     print(f"[sloth] {run_id}: agent stopped ({stats.stopped_by}, {stats.wall_seconds}s, ${stats.usd:.4f}); tests after ...", flush=True)
     tests_after = run_tests(worktree, test_cmd, home, tmp)
+    tests_after.tail = redact(tests_after.tail)
 
     commit_msg = (
         f"sloth: {chore.id} ({model.alias})\n\n{chore.text}\n\n"
@@ -184,12 +188,14 @@ def run_night(
     files, added, removed = gitops.numstat(worktree, base_sha) if committed else (0, 0, 0)
     if committed:
         (run_dir / "diff.patch").write_text(gitops.diff_patch(worktree, base_sha))
+    gitops.bring_back(repo, worktree, branch)  # even with no change: marks the chore as attempted
 
     acceptance = None
     if check is not None:
         if check.exists():
             print(f"[sloth] {run_id}: hidden acceptance check ...", flush=True)
             acceptance = run_check(check, worktree, home, tmp)
+            acceptance["output"] = redact(acceptance["output"])
         else:
             acceptance = {"ok": False, "output": f"no check script at {check}"}
 
@@ -218,10 +224,11 @@ def run_night(
     morning = report.render_run(result)
     (run_dir / "MORNING_REPORT.md").write_text(morning)
     (out_dir / "LATEST.md").write_text(morning)  # what you open with your coffee
+    (run_dir / "TRANSCRIPT.md").write_text(redact(report.render_transcript(run_dir / "events.jsonl", run_id)))
 
     rmtree_quiet(home)
     rmtree_quiet(tmp)
     if not keep_worktree:
-        gitops.remove_worktree(repo, worktree)
+        gitops.remove_workspace(worktree)
     print(f"[sloth] {run_id}: {result['verdict']} -> {short(run_dir / 'MORNING_REPORT.md')}", flush=True)
     return result

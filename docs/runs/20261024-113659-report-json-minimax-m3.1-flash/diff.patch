@@ -1,0 +1,144 @@
+diff --git a/tally/cli.py b/tally/cli.py
+index 6924e6c..a0a1c59 100644
+--- a/tally/cli.py
++++ b/tally/cli.py
+@@ -7,7 +7,7 @@ from datetime import datetime
+ 
+ from . import __version__, ledger
+ from .money import format_amount, parse_amount
+-from .report import render
++from .report import render, render_json
+ 
+ 
+ def build_parser() -> argparse.ArgumentParser:
+@@ -26,6 +26,7 @@ def build_parser() -> argparse.ArgumentParser:
+ 
+     rep = sub.add_parser("report", help="totals by category")
+     rep.add_argument("--month", help="only this month, YYYY-MM")
++    rep.add_argument("--json", action="store_true", help="print the report as JSON")
+ 
+     exp = sub.add_parser("export", help="write all entries as CSV")
+     exp.add_argument("-o", "--output", help="file to write (default: stdout)")
+@@ -55,7 +56,10 @@ def main(argv: list[str] | None = None) -> int:
+         return 0
+ 
+     if args.command == "report":
+-        print(render(entries, args.month))
++        if args.json:
++            print(render_json(entries, args.month))
++        else:
++            print(render(entries, args.month))
+         return 0
+ 
+     if args.command == "export":
+diff --git a/tally/report.py b/tally/report.py
+index f7ca91e..9ccbc4a 100644
+--- a/tally/report.py
++++ b/tally/report.py
+@@ -1,5 +1,6 @@
+ """Monthly and all-time totals by category."""
+ 
++import json
+ from decimal import Decimal
+ 
+ from .ledger import Entry
+@@ -20,6 +21,24 @@ def calcualte_totals(entries: list[Entry]) -> dict[str, Decimal]:
+     return dict(sorted(totals.items(), key=lambda kv: (-kv[1], kv[0])))
+ 
+ 
++def render_json(entries: list[Entry], month: str | None = None) -> str:
++    filtered = entries_for_month(entries, month)
++    totals = calcualte_totals(filtered)
++    grand = sum(totals.values(), Decimal("0"))
++    data = {
++        "month": month,
++        "count": len(filtered),
++        "total": _amount_string(grand),
++        "by_category": {category: _amount_string(amount) for category, amount in totals.items()},
++    }
++    return json.dumps(data)
++
++
++def _amount_string(value: Decimal) -> str:
++    rounded = value.quantize(CENT)
++    return "0.00" if rounded == 0 else format(rounded, "f")
++
++
+ def render(entries: list[Entry], month: str | None = None) -> str:
+     entries = sorted(entries_for_month(entries, month), key=lambda e: e.when)
+     totals = calcualte_totals(entries)
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 6d82bca..0f087c8 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -1,5 +1,6 @@
+ import contextlib
+ import io
++import json
+ import os
+ import tempfile
+ import unittest
+@@ -33,6 +34,21 @@ class CliTest(unittest.TestCase):
+         self.assertIn("$1,200.00", text)
+         self.assertIn("2 entries", text)
+ 
++    def test_report_json(self):
++        self.run_cli("add", "4.50", "coffee", "--date", "2026-10-01")
++        self.run_cli("add", "62.10", "groceries", "--date", "2026-10-02")
++        code, text = self.run_cli("report", "--month", "2026-10", "--json")
++        self.assertEqual(code, 0)
++        self.assertEqual(
++            json.loads(text),
++            {
++                "month": "2026-10",
++                "count": 2,
++                "total": "66.60",
++                "by_category": {"groceries": "62.10", "coffee": "4.50"},
++            },
++        )
++
+     def test_bad_amount_is_rejected(self):
+         with contextlib.redirect_stderr(io.StringIO()):
+             self.assertEqual(self.run_cli("add", "lots", "coffee")[0], 2)
+diff --git a/tests/test_report.py b/tests/test_report.py
+index 4317dbe..6229684 100644
+--- a/tests/test_report.py
++++ b/tests/test_report.py
+@@ -1,9 +1,10 @@
++import json
+ import unittest
+ from datetime import datetime
+ from decimal import Decimal
+ 
+ from tally.ledger import Entry
+-from tally.report import calcualte_totals, entries_for_month, render
++from tally.report import calcualte_totals, entries_for_month, render, render_json
+ 
+ 
+ def entry(day, amount, category, month=10):
+@@ -35,6 +36,25 @@ class ReportTest(unittest.TestCase):
+         self.assertIn("total", text)
+         self.assertIn("3 entries, average $23.47", text)
+ 
++    def test_render_json_month(self):
++        data = json.loads(render_json(ENTRIES, "2026-10"))
++        self.assertEqual(
++            data,
++            {
++                "month": "2026-10",
++                "count": 3,
++                "total": "70.40",
++                "by_category": {"groceries": "62.10", "coffee": "8.30"},
++            },
++        )
++
++    def test_render_json_all_time(self):
++        data = json.loads(render_json(ENTRIES))
++        self.assertIsNone(data["month"])
++        self.assertEqual(data["count"], 4)
++        self.assertEqual(data["total"], "1270.40")
++        self.assertEqual(data["by_category"]["rent"], "1200.00")
++
+ 
+ if __name__ == "__main__":
+     unittest.main()

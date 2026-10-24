@@ -1,0 +1,68 @@
+diff --git a/tally/report.py b/tally/report.py
+index f7ca91e..73489ee 100644
+--- a/tally/report.py
++++ b/tally/report.py
+@@ -13,7 +13,7 @@ def entries_for_month(entries: list[Entry], month: str | None) -> list[Entry]:
+     return [e for e in entries if e.when.strftime("%Y-%m") == month]
+ 
+ 
+-def calcualte_totals(entries: list[Entry]) -> dict[str, Decimal]:
++def calculate_totals(entries: list[Entry]) -> dict[str, Decimal]:
+     totals: dict[str, Decimal] = {}
+     for entry in entries:
+         totals[entry.category] = totals.get(entry.category, Decimal("0")) + entry.amount
+@@ -22,7 +22,7 @@ def calcualte_totals(entries: list[Entry]) -> dict[str, Decimal]:
+ 
+ def render(entries: list[Entry], month: str | None = None) -> str:
+     entries = sorted(entries_for_month(entries, month), key=lambda e: e.when)
+-    totals = calcualte_totals(entries)
++    totals = calculate_totals(entries)
+     grand = sum(totals.values(), Decimal("0"))
+     # TODO: blows up with a traceback on a fresh install (empty ledger).
+     average = (grand / len(entries)).quantize(CENT)
+@@ -37,3 +37,15 @@ def render(entries: list[Entry], month: str | None = None) -> str:
+         f"  {len(entries)} entries, average {format_amount(average)}",
+     ]
+     return "\n".join(lines)
++
++
++def calcualte_totals(entries: list[Entry]) -> dict[str, Decimal]:
++    """Deprecated alias for `calculate_totals`."""
++    import warnings
++
++    warnings.warn(
++        "tally.report.calcualte_totals is deprecated; use calculate_totals instead",
++        DeprecationWarning,
++        stacklevel=2,
++    )
++    return calculate_totals(entries)
+diff --git a/tests/test_report.py b/tests/test_report.py
+index 4317dbe..708b5dd 100644
+--- a/tests/test_report.py
++++ b/tests/test_report.py
+@@ -3,7 +3,7 @@ from datetime import datetime
+ from decimal import Decimal
+ 
+ from tally.ledger import Entry
+-from tally.report import calcualte_totals, entries_for_month, render
++from tally.report import calculate_totals, calcualte_totals, entries_for_month, render
+ 
+ 
+ def entry(day, amount, category, month=10):
+@@ -20,10 +20,15 @@ ENTRIES = [
+ 
+ class ReportTest(unittest.TestCase):
+     def test_totals_are_sorted_biggest_first(self):
+-        totals = calcualte_totals(ENTRIES)
++        totals = calculate_totals(ENTRIES)
+         self.assertEqual(list(totals), ["rent", "groceries", "coffee"])
+         self.assertEqual(totals["coffee"], Decimal("8.30"))
+ 
++    def test_calcualte_totals_is_deprecated(self):
++        with self.assertWarns(DeprecationWarning):
++            totals = calcualte_totals(ENTRIES)
++        self.assertEqual(totals["coffee"], Decimal("8.30"))
++
+     def test_month_filter(self):
+         self.assertEqual(len(entries_for_month(ENTRIES, "2026-10")), 3)
+         self.assertEqual(len(entries_for_month(ENTRIES, None)), 4)

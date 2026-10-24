@@ -1,0 +1,330 @@
+{
+ "fetched_at": "2026-10-24T15:41:01Z",
+ "source": "https://api.tokenfactory.nebius.com/v1/models?verbose=true",
+ "models": [
+  {
+   "id": "moonshotai/Kimi-K3",
+   "prompt": "0.000003",
+   "input_cache_read": "0.0000003",
+   "completion": "0.000015",
+   "context_length": 1024000,
+   "supported_features": [
+    "tools",
+    "reasoning"
+   ]
+  },
+  {
+   "id": "Qwen/Qwen3-235B-A22B-Instruct-2507",
+   "prompt": "0.0000002",
+   "input_cache_read": null,
+   "completion": "0.0000006",
+   "context_length": 262144,
+   "supported_features": [
+    "tools",
+    "json_mode",
+    "structured_outputs"
+   ]
+  },
+  {
+   "id": "google/gemma-3-27b-it",
+   "prompt": "0.0000001",
+   "input_cache_read": null,
+   "completion": "0.0000003",
+   "context_length": 110000,
+   "supported_features": [
+    "tools"
+   ]
+  },
+  {
+   "id": "Qwen/Qwen3-Embedding-8B",
+   "prompt": "0.00000001",
+   "input_cache_read": null,
+   "completion": "0.0",
+   "context_length": 40960,
+   "supported_features": null
+  },
+  {
+   "id": "openai/gpt-oss-120b",
+   "prompt": "0.00000015",
+   "input_cache_read": null,
+   "completion": "0.0000006",
+   "context_length": 131072,
+   "supported_features": [
+    "tools",
+    "json_mode",
+    "structured_outputs",
+    "reasoning"
+   ]
+  },
+  {
+   "id": "Qwen/Qwen3-30B-A3B-Instruct-2507",
+   "prompt": "0.0000001",
+   "input_cache_read": null,
+   "completion": "0.0000003",
+   "context_length": 262144,
+   "supported_features": [
+    "tools",
+    "json_mode",
+    "structured_outputs"
+   ]
+  },
+  {
+   "id": "NousResearch/Hermes-4-405B",
+   "prompt": "0.000001",
+   "input_cache_read": null,
+   "completion": "0.000003",
+   "context_length": 131072,
+   "supported_features": [
+    "tools",
+    "json_mode",
+    "structured_outputs",
+    "reasoning"
+   ]
+  },
+  {
+   "id": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+   "prompt": "0.00000006",
+   "input_cache_read": null,
+   "completion": "0.00000024",
+   "context_length": 262144,
+   "supported_features": [
+    "tools",
+    "reasoning"
+   ]
+  },
+  {
+   "id": "zai-org/GLM-5.1",
+   "prompt": "0.0000014",
+   "input_cache_read": null,
+   "completion": "0.0000044",
+   "context_length": 202752,
+   "supported_features": [
+    "tools",
+    "json_mode",
+    "structured_outputs",
+    "reasoning"
+   ]
+  },
+  {
+   "id": "nvidia/Nemotron-3_5-Lightning",
+   "prompt": "0.00000006",
+   "input_cache_read": null,
+   "completion": "0.00000024",
+   "context_length": 1048576,
+   "supported_features": [
+    "tools",
+    "reasoning"
+   ]
+  },
+  {
+   "id": "openbmb/MiniCPM-V-4_5",
+   "prompt": "0.000000658",
+   "input_cache_read": null,
+   "completion": "0.00000111",
+   "context_length": 32000,
+   "supported_features": [
+    "json_mode",
+    "structured_outputs"
+   ]
+  },
+  {
+   "id": "Qwen/Qwen3.8-27B",
+   "prompt": "0.00000045",
+   "input_cache_read": "0.0000001",
+   "completion": "0.000003",
+   "context_length": 262144,
+   "supported_features": [
+    "tools",
+    "reasoning"
+   ]
+  },
+  {
+   "id": "deepseek-ai/DeepSeek-V4-Flash-0731",
+   "prompt": "0.00000014",
+   "input_cache_read": "0.00000001",
+   "completion": "0.00000028",
+   "context_length": 1024000,
+   "supported_features": [
+    "tools",
+    "json_mode",
+    "structured_outputs",
+    "reasoning"
+   ]
+  },
+  {
+   "id": "MiniMaxAI/MiniMax-M3",
+   "prompt": "0.0000003",
+   "input_cache_read": "0.00000006",
+   "completion": "0.0000012",
+   "context_length": 1048576,
+   "supported_features": [
+    "tools",
+    "reasoning"
+   ]
+  },
+  {
+   "id": "moonshotai/Kimi-K2.7-Code",
+   "prompt": "0.00000095",
+   "input_cache_read": "0.00000015",
+   "completion": "0.000004",
+   "context_length": 262144,
+   "supported_features": [
+    "tools",
+    "reasoning"
+   ]
+  },
+  {
+   "id": "nvidia/Nemotron-3-Ultra-550b-a55b",
+   "prompt": "0.000001",
+   "input_cache_read": "0.00000012",
+   "completion": "0.000003",
+   "context_length": 1048576,
+   "supported_features": [
+    "tools",
+    "reasoning"
+   ]
+  },
+  {
+   "id": "moonshotai/Kimi-K2.6",
+   "prompt": "0.00000095",
+   "input_cache_read": "0.00000016",
+   "completion": "0.000004",
+   "context_length": 262144,
+   "supported_features": [
+    "tools",
+    "reasoning"
+   ]
+  },
+  {
+   "id": "nvidia/nemotron-3-super-120b-a12b",
+   "prompt": "0.0000003",
+   "input_cache_read": "0.00000006",
+   "completion": "0.0000009",
+   "context_length": 262144,
+   "supported_features": [
+    "tools",
+    "reasoning"
+   ]
+  },
+  {
+   "id": "deepseek-ai/DeepSeek-V4-Pro",
+   "prompt": "0.00000175",
+   "input_cache_read": null,
+   "completion": "0.0000035",
+   "context_length": 1048576,
+   "supported_features": [
+    "tools",
+    "json_mode",
+    "structured_outputs",
+    "reasoning"
+   ]
+  },
+  {
+   "id": "deepseek-ai/DeepSeek-V4-Pro-0813",
+   "prompt": "0.00000132",
+   "input_cache_read": "0.00000004",
+   "completion": "0.00000396",
+   "context_length": 979000,
+   "supported_features": [
+    "tools",
+    "reasoning"
+   ]
+  },
+  {
+   "id": "zai-org/GLM-5.2",
+   "prompt": "0.0000014",
+   "input_cache_read": "0.00000014",
+   "completion": "0.0000044",
+   "context_length": 1048576,
+   "supported_features": [
+    "tools",
+    "reasoning"
+   ]
+  },
+  {
+   "id": "MiniMaxAI/MiniMax-M3.1-Flash",
+   "prompt": "0.00000015",
+   "input_cache_read": "0.000000015",
+   "completion": "0.0000006",
+   "context_length": 1048576,
+   "supported_features": [
+    "tools",
+    "reasoning"
+   ]
+  },
+  {
+   "id": "deepseek-ai/DeepSeek-V4.1-Flash-1017",
+   "prompt": "0.0000003",
+   "input_cache_read": "0.000000006",
+   "completion": "0.0000012",
+   "context_length": 1048576,
+   "supported_features": [
+    "tools",
+    "reasoning"
+   ]
+  },
+  {
+   "id": "reflection/beam",
+   "prompt": "0.00000025",
+   "input_cache_read": "0.00000005",
+   "completion": "0.000001",
+   "context_length": 1048576,
+   "supported_features": [
+    "tools",
+    "reasoning"
+   ]
+  },
+  {
+   "id": "nvidia/Nemotron-3.5-Super-VL",
+   "prompt": "0.0000003",
+   "input_cache_read": "0.00000006",
+   "completion": "0.0000009",
+   "context_length": 1048576,
+   "supported_features": [
+    "tools",
+    "reasoning"
+   ]
+  },
+  {
+   "id": "meta-models/muse-spark-open",
+   "prompt": "0.00000125",
+   "input_cache_read": "0.00000015",
+   "completion": "0.00000425",
+   "context_length": 1048576,
+   "supported_features": [
+    "tools",
+    "reasoning"
+   ]
+  },
+  {
+   "id": "zai-org/GLM-5.3-Flash",
+   "prompt": "0.00000015",
+   "input_cache_read": "0.00000003",
+   "completion": "0.0000005",
+   "context_length": 1024000,
+   "supported_features": [
+    "tools",
+    "reasoning"
+   ]
+  },
+  {
+   "id": "deepseek-ai/DeepSeek-V4.1-Flash",
+   "prompt": "0.0000003",
+   "input_cache_read": "0.00000001",
+   "completion": "0.0000012",
+   "context_length": 1048000,
+   "supported_features": null
+  },
+  {
+   "id": "zai-org/GLM-5.3",
+   "prompt": "0.0000014",
+   "input_cache_read": "0.00000026",
+   "completion": "0.0000044",
+   "context_length": 1024000,
+   "supported_features": [
+    "tools",
+    "reasoning"
+   ]
+  }
+ ]
+}

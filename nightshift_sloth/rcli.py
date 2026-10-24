@@ -103,11 +103,14 @@ class RunStats:
 class Redactor:
     """Scrub the key and local absolute paths from everything we keep as evidence."""
 
-    def __init__(self, api_key: str, worktree: Path, home: Path, tmp: Path):
+    def __init__(self, api_key: str, worktree: Path, home: Path, tmp: Path, state: Path | None = None):
         self.pairs: list[tuple[str, str]] = []
         if api_key:
             self.pairs.append((api_key, "[REDACTED]"))
-        for path, label in ((worktree, "$WORKTREE"), (home, "$SLOTH_HOME"), (tmp, "$TMPDIR")):
+        places = [(worktree, "$WORKTREE"), (home, "$SLOTH_HOME"), (tmp, "$TMPDIR")]
+        if state is not None:
+            places.append((state, "$SLOTH_STATE"))
+        for path, label in places:
             for variant in {str(path), str(path.resolve())}:
                 self.pairs.append((variant, label))
         self.pairs.sort(key=lambda kv: -len(kv[0]))

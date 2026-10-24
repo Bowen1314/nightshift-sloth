@@ -1,0 +1,85 @@
+diff --git a/README.md b/README.md
+index 35b7dd2..64ebfbf 100644
+--- a/README.md
++++ b/README.md
+@@ -12,10 +12,76 @@ Or run it straight from a checkout with `python -m tally`.
+ 
+ ## Usage
+ 
+-```sh
+-tally add 4.50 --category coffee
+-tally list
+-tally report
++Run `python -m tally --help` for the top-level help:
++
++```text
++usage: tally [-h] [--version] {add,list,report,export} ...
++
++tallyho: a tiny expense ledger for your terminal
++
++positional arguments:
++  {add,list,report,export}
++    add                 record an expense (negative amount = refund)
++    list                show the most recent entries
++    report              totals by category
++    export              write all entries as CSV
++
++options:
++  -h, --help            show this help message and exit
++  --version             show program's version number and exit
++```
++
++### `add`
++
++Run `python -m tally add --help` for details:
++
++```text
++usage: tally add [-h] [--note NOTE] [--date DATE] amount category
++
++positional arguments:
++  amount       e.g. 4.50, "$4.50", 1,234.56 or -12
++  category     e.g. coffee, groceries, rent
++
++options:
++  -h, --help   show this help message and exit
++  --note NOTE  free-text note
++  --date DATE  YYYY-MM-DD (default: now)
++```
++
++### `list`
++
++Run `python -m tally list --help` for details:
++
++```text
++usage: tally list [-h] [-n LIMIT]
++
++options:
++  -h, --help         show this help message and exit
++  -n, --limit LIMIT  how many entries (default: 10)
++```
++
++### `report`
++
++Run `python -m tally report --help` for details:
++
++```text
++usage: tally report [-h] [--month MONTH]
++
++options:
++  -h, --help     show this help message and exit
++  --month MONTH  only this month, YYYY-MM
++```
++
++### `export`
++
++Run `python -m tally export --help` for details:
++
++```text
++usage: tally export [-h] [-o OUTPUT]
++
++options:
++  -h, --help           show this help message and exit
++  -o, --output OUTPUT  file to write (default: stdout)
+ ```
+ 
+ Entries live in `~/.tallyho.json`. Set `TALLY_FILE` to use a different file.

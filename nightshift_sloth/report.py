@@ -102,6 +102,9 @@ def render_run(r: dict) -> str:
         "",
         "Nothing was merged or pushed. The sloth only works on its own branch.",
         "",
+        "Full agent session: [TRANSCRIPT.md](TRANSCRIPT.md) (readable) · `events.jsonl` (raw R-CLI JSON events) · "
+        "`diff.patch` · `run.json`.",
+        "",
     ]
     return "\n".join(out)
 
@@ -134,8 +137,19 @@ def render_summary(runs: list[dict], ledger_total: float, cap: float) -> str:
         "| Model | Price (per 1M tokens) | Done | Tests green | Stopped early | Median wall time | Total cost | Cost per done chore |",
         "|---|---|---|---|---|---|---|---|",
     ]
-    for model, rs in sorted(by_model.items(), key=lambda kv: kv[0]):
-        done = sum(1 for r in rs if r["tests_after"]["ok"] and (r.get("acceptance") or {}).get("ok"))
+    def _done(r: dict) -> bool:
+        return bool(r["tests_after"]["ok"] and (r.get("acceptance") or {}).get("ok"))
+
+    def _rank(model: str) -> tuple:
+        rs = by_model[model]
+        done = sum(_done(r) for r in rs)
+        cost = sum(r["stats"]["usd"] for r in rs)
+        return (-done, cost / done if done else float("inf"), model)
+
+    order = sorted(by_model, key=_rank)
+    for model in order:
+        rs = by_model[model]
+        done = sum(_done(r) for r in rs)
         green = sum(1 for r in rs if r["tests_after"]["ok"] and r["commit"])
         early = sum(1 for r in rs if r["stats"]["stopped_by"] != "agent finished")
         cost = sum(r["stats"]["usd"] for r in rs)
@@ -144,11 +158,11 @@ def render_summary(runs: list[dict], ledger_total: float, cap: float) -> str:
         lines.append(
             f"| `{model}` | {rs[0]['model']['price'].replace(' per 1M tokens', '')} | {done}/{len(rs)} | {green}/{len(rs)} | {early} | {_dur(med)} | ${cost:.4f} | {per} |"
         )
-    lines += ["", "## Chore by chore", "", "| Chore | " + " | ".join(f"`{m.split('/')[-1]}`" for m in sorted(by_model)) + " |"]
+    lines += ["", "## Chore by chore", "", "| Chore | " + " | ".join(f"`{m.split('/')[-1]}`" for m in order) + " |"]
     lines.append("|---|" + "---|" * len(by_model))
     for chore in chores:
         cells = []
-        for model in sorted(by_model):
+        for model in order:
             rs = [r for r in by_model[model] if r["chore"]["id"] == chore]
             if not rs:
                 cells.append("-")
@@ -161,11 +175,47 @@ def render_summary(runs: list[dict], ledger_total: float, cap: float) -> str:
     total_runs = sum(r["stats"]["usd"] for r in runs)
     lines += [
         "",
-        f"Runs on this page cost **${total_runs:.4f}** in total. "
-        f"The project ledger (every model call, including smoke tests) stands at **${ledger_total:.4f}** of a ${cap:.2f} cap.",
+        f"The {len(runs)} runs on this page cost **${total_runs:.4f}** in total. "
+        f"The spend ledger (every model call made with this ledger, including smoke tests and discarded runs) "
+        f"stands at **${ledger_total:.4f}** of a ${cap:.2f} cap.",
         "",
         "Legend: **done** = tests green and hidden check passes; **partial** = tests green but the hidden check fails;"
         " **failed** = no change, or tests red.",
         "",
     ]
     return "\n".join(lines)
+
+
+def _clip(text: str, limit: int) -> str:
+    text = text.strip()
+    return text if len(text) <= limit else text[:limit].rstrip() + " ..."
+
+
+def render_transcript(events_path: Path, title: str) -> str:
+    """A readable account of one R-CLI session, built from its JSON event stream."""
+    out = [f"# R-CLI session: {title}", "", "Rendered from `events.jsonl` (R-CLI `--format json`). Long tool inputs and outputs are clipped.", ""]
+    calls = 0
+    for line in events_path.read_text(errors="replace").splitlines():
+        try:
+            rec = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        t, p = rec.get("type"), rec.get("payload") or {}
+        if t == "user:message":
+            out += ["## Prompt", "", "```text", _clip(str(p.get("text", "")), 3000), "```", ""]
+        elif t == "assistant:message" and (p.get("text") or "").strip():
+            out += ["**Agent:** " + _clip(p["text"], 1500).replace("\n", "\n> "), ""]
+        elif t == "tool:requested":
+            for c in p.get("calls") or []:
+                calls += 1
+                args = json.dumps(c.get("input") or {}, ensure_ascii=False)
+                out.append(f"{calls}. `{c.get('name') or '(empty name)'}` {_clip(args, 400)}")
+        elif t == "tool:result":
+            out.append(f"   - result: {_clip(str(p.get('title', '')), 200)}")
+        elif t == "tool:error":
+            out.append(f"   - **error:** {_clip(str(p.get('error', '')).splitlines()[0] if p.get('error') else '', 200)}")
+        elif t == "run:error":
+            out += ["", f"**Run error:** {_clip(str(p.get('error')), 300)}", ""]
+        elif t == "turn:end":
+            out += ["", f"_Turn ended: {p.get('status')} after {round((p.get('durationMs') or 0) / 1000)}s._", ""]
+    return "\n".join(out) + "\n"

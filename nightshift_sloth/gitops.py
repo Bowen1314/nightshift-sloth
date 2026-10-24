@@ -1,7 +1,15 @@
-"""Git plumbing: throwaway worktrees on sloth/ branches. Never touches main."""
+"""Git plumbing: a private throwaway clone per night, on a sloth/ branch. Never touches main.
+
+The agent works in its own clone, not a `git worktree` of your repo. The clone
+holds only the history of the base commit, has no remote, and shares no refs
+with your repo, so the agent cannot see your other branches (including earlier
+sloth attempts at the same chore) or move any of your refs. When the night is
+over, the harness fetches the one sloth branch back into your repo.
+"""
 
 from __future__ import annotations
 
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -33,7 +41,7 @@ def is_clean(repo: Path) -> bool:
 
 
 def exclude_backboard_dir(repo: Path) -> None:
-    """Keep R-CLI's session folder out of every worktree's status and commits."""
+    """Keep R-CLI's session folder out of the working copy's status and commits."""
     common = Path(git(repo, "rev-parse", "--git-common-dir").strip())
     if not common.is_absolute():
         common = (repo / common).resolve()
@@ -47,10 +55,20 @@ def exclude_backboard_dir(repo: Path) -> None:
             fh.write(".backboard/\n")
 
 
-def add_worktree(repo: Path, worktree: Path, branch: str, base: str) -> str:
-    worktree.parent.mkdir(parents=True, exist_ok=True)
-    git(repo, "worktree", "add", "-q", "-b", branch, str(worktree), base)
-    return rev(worktree, "HEAD")
+def add_workspace(repo: Path, workdir: Path, branch: str, base_sha: str) -> str:
+    """Make a private clone of `base_sha`'s history only, checked out on a new sloth branch."""
+    workdir.mkdir(parents=True, exist_ok=False)
+    git(workdir, "init", "-q")
+    # Fetch exactly the base commit (and its ancestors). No other refs, no tags, no remote.
+    git(workdir, "fetch", "-q", "--no-tags", "--no-write-fetch-head", str(repo.resolve()), base_sha)
+    git(workdir, "checkout", "-q", "-b", branch, base_sha)
+    exclude_backboard_dir(workdir)
+    return rev(workdir, "HEAD")
+
+
+def bring_back(repo: Path, workdir: Path, branch: str) -> None:
+    """Fetch the finished sloth branch from the private clone into the user's repo."""
+    git(repo, "fetch", "-q", "--no-tags", "--no-write-fetch-head", str(workdir.resolve()), f"refs/heads/{branch}:refs/heads/{branch}")
 
 
 def commit_all(worktree: Path, message: str) -> str | None:
@@ -88,5 +106,5 @@ def numstat(worktree: Path, base: str) -> tuple[int, int, int]:
     return files, added, removed
 
 
-def remove_worktree(repo: Path, worktree: Path) -> None:
-    git(repo, "worktree", "remove", "--force", str(worktree), check=False)
+def remove_workspace(workdir: Path) -> None:
+    shutil.rmtree(workdir, ignore_errors=True)

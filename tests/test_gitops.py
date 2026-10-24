@@ -11,7 +11,7 @@ def sh(cwd, *argv):
 
 
 class GitopsTest(unittest.TestCase):
-    def test_worktree_commit_never_touches_main(self):
+    def test_private_clone_commit_never_touches_main(self):
         with tempfile.TemporaryDirectory() as d:
             repo = Path(d) / "repo"
             repo.mkdir()
@@ -20,10 +20,12 @@ class GitopsTest(unittest.TestCase):
             sh(repo, "git", "add", ".")
             sh(repo, "git", "-c", "user.name=t", "-c", "user.email=t@localhost", "commit", "-qm", "init")
             main_sha = gitops.rev(repo, "main")
+            sh(repo, "git", "branch", "sloth/other/0-earlier")  # an earlier attempt the agent must not see
 
             wt = Path(d) / "wt"
-            gitops.exclude_backboard_dir(repo)
-            gitops.add_worktree(repo, wt, "sloth/chore/1-model", main_sha)
+            gitops.add_workspace(repo, wt, "sloth/chore/1-model", main_sha)
+            self.assertEqual(gitops.git(wt, "for-each-ref", "--format=%(refname)").split(), ["refs/heads/sloth/chore/1-model"])
+            self.assertEqual(gitops.git(wt, "remote").strip(), "")
             (wt / "a.txt").write_text("two\n")
             (wt / ".backboard").mkdir()
             (wt / ".backboard" / "session.json").write_text("{}")
@@ -33,10 +35,13 @@ class GitopsTest(unittest.TestCase):
             self.assertEqual(gitops.rev(repo, "main"), main_sha)
             self.assertEqual((repo / "a.txt").read_text(), "one\n")
             self.assertEqual(gitops.numstat(wt, main_sha), (1, 1, 1))  # .backboard/ is excluded
-            self.assertEqual(gitops.sloth_branches(repo), ["sloth/chore/1-model"])
-            gitops.remove_worktree(repo, wt)
+            self.assertEqual(gitops.sloth_branches(repo), ["sloth/other/0-earlier"])
+            gitops.bring_back(repo, wt, "sloth/chore/1-model")
+            self.assertEqual(gitops.rev(repo, "sloth/chore/1-model"), sha)
+            self.assertEqual(gitops.rev(repo, "main"), main_sha)
+            gitops.remove_workspace(wt)
+            self.assertFalse(wt.exists())
             self.assertIsNone(gitops.commit_all(repo, "nothing to commit"))
-
 
 if __name__ == "__main__":
     unittest.main()

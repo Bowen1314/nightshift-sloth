@@ -1,0 +1,86 @@
+{
+  "run_id": "20261024-113558-readme-usage-drift-gpt-oss-120b",
+  "date": "2026-10-24 11:36",
+  "repo": "tallyho",
+  "chore": {
+    "id": "readme-usage-drift",
+    "text": "The Usage section of `README.md` has drifted from the real CLI. It still shows a\n`--category` flag that no longer exists and never mentions `export` or most options. Rewrite the Usage section so it\ndocuments every subcommand and every option exactly as `python -m tally --help` and each subcommand's `--help`\ndescribe them. Leave the other README sections alone."
+  },
+  "branch": "sloth/readme-usage-drift/20261024-113558-gpt-oss-120b",
+  "base": {
+    "ref": "main",
+    "sha": "d5bfc0f79cca72066e6f794512365beb85196e0d"
+  },
+  "commit": "d4caa507c225ccf8adc2bbd4d764f6751df9582a",
+  "agent": "Backboard R-CLI 3.0.4 (built from source @ 51bee17)",
+  "model": {
+    "alias": "gpt-oss-120b",
+    "id": "openai/gpt-oss-120b",
+    "price": "$0.15 in, $0.60 out per 1M tokens"
+  },
+  "timer": 600,
+  "grace": 120,
+  "per_run_cap_usd": 0.25,
+  "stats": {
+    "exit_code": -15,
+    "stopped_by": "stuck loop",
+    "wall_seconds": 32.2,
+    "model_calls": 33,
+    "prompt_tokens": 221994,
+    "cached_tokens": 217264,
+    "completion_tokens": 7678,
+    "usd": 0.037905900000000006,
+    "tool_calls": {
+      "glob": 4,
+      "": 1,
+      "read": 7,
+      "executes": 1,
+      "execute": 19,
+      "apply_patch": 2
+    },
+    "tool_errors": 16,
+    "commands": [
+      "python -m tally --help",
+      "python3 -m tally --help",
+      "python3 -m tally add --help",
+      "python3 -m tally list --help",
+      "python3 -m tally report --help",
+      "python3 -m tally export --help",
+      "python3 -m unittest discover -s tests",
+      "python -m tally --help",
+      "python3 -m tally --help",
+      "python3 -m tally add --help",
+      "python3 -m tally list --help",
+      "python3 -m tally report --help"
+    ],
+    "final_message": "",
+    "errors": [],
+    "warnings": [],
+    "turn_status": null,
+    "session_id": "sess_ccaa092c"
+  },
+  "tests_before": {
+    "ok": true,
+    "summary": "Ran 12 tests in 0.011s \u00b7 OK",
+    "seconds": 0.1,
+    "tail": "$WORKTREE/tally/ledger.py:62: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).\n  when=when or datetime.utcnow(),\n............\n----------------------------------------------------------------------\nRan 12 tests in 0.011s\nOK"
+  },
+  "tests_after": {
+    "ok": true,
+    "summary": "Ran 12 tests in 0.007s \u00b7 OK",
+    "seconds": 0.1,
+    "tail": "$WORKTREE/tally/ledger.py:62: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).\n  when=when or datetime.utcnow(),\n............\n----------------------------------------------------------------------\nRan 12 tests in 0.007s\nOK"
+  },
+  "diff": {
+    "files": 1,
+    "added": 20,
+    "removed": 3,
+    "stat": " README.md | 23 ++++++++++++++++++++---\n 1 file changed, 20 insertions(+), 3 deletions(-)"
+  },
+  "acceptance": {
+    "ok": true,
+    "output": "ok   README section '## Install' left alone\nok   README section '## Development' left alone\nok   README section '## License' left alone\nok   README still has a Usage section\nok   the stale --category flag is gone\nok   could introspect the CLI parser\nok   Usage documents the `add` subcommand\nok   Usage documents `add --note`\nok   Usage documents `add --date`\nok   Usage documents the `list` subcommand\nok   Usage documents `list -n/--limit`\nok   Usage documents the `report` subcommand\nok   Usage documents `report --month`\nok   Usage documents the `export` subcommand\nok   Usage documents `export -o/--output`\nok   the repo's own test suite passes\n\nACCEPTED"
+  },
+  "verdict": "NEEDS A LOOK",
+  "ledger_total_usd": 0.327319
+}

@@ -1,0 +1,74 @@
+{
+  "run_id": "20261024-113429-readme-usage-drift-deepseek-v4-flash",
+  "date": "2026-10-24 11:34",
+  "repo": "tallyho",
+  "chore": {
+    "id": "readme-usage-drift",
+    "text": "The Usage section of `README.md` has drifted from the real CLI. It still shows a\n`--category` flag that no longer exists and never mentions `export` or most options. Rewrite the Usage section so it\ndocuments every subcommand and every option exactly as `python -m tally --help` and each subcommand's `--help`\ndescribe them. Leave the other README sections alone."
+  },
+  "branch": "sloth/readme-usage-drift/20261024-113429-deepseek-v4-flash",
+  "base": {
+    "ref": "main",
+    "sha": "d5bfc0f79cca72066e6f794512365beb85196e0d"
+  },
+  "commit": "58e3a88b006fd52ed299f6e0b79efef08d7ead41",
+  "agent": "Backboard R-CLI 3.0.4 (built from source @ 51bee17)",
+  "model": {
+    "alias": "deepseek-v4-flash",
+    "id": "deepseek-ai/DeepSeek-V4-Flash-0731",
+    "price": "$0.14 in, cached $0.010, $0.28 out per 1M tokens"
+  },
+  "timer": 600,
+  "grace": 120,
+  "per_run_cap_usd": 0.25,
+  "stats": {
+    "exit_code": 0,
+    "stopped_by": "agent finished",
+    "wall_seconds": 14.7,
+    "model_calls": 9,
+    "prompt_tokens": 70483,
+    "cached_tokens": 62464,
+    "completion_tokens": 1772,
+    "usd": 0.0022434599999999996,
+    "tool_calls": {
+      "read": 5,
+      "glob": 1,
+      "execute": 2,
+      "edit": 2
+    },
+    "tool_errors": 0,
+    "commands": [
+      "cd $WORKTREE && python3 -m tally --help && echo \"===ADD===\" && python3 -m tally add --help && echo \"===LIST===\" && python3 -m tally list --help && echo \"===REPORT===\" && python3 -m tally report --help && echo \"===EXPORT===\" && python3 -m tally export --help",
+      "cd $WORKTREE && python3 -m unittest discover -s tests"
+    ],
+    "final_message": "Tests pass (12 OK; the DeprecationWarning is pre-existing in `ledger.py:62`, untouched by this chore). Done.\n\nWhat I changed: rewrote the `## Usage` section in `README.md` to document all four subcommands (`add`, `list`, `report`, `export`) and every option exactly as the CLI's `--help` output describes them. Removed the stale `--category` flag (there is no such option; category is a positional arg), added `export`, and listed each option per subcommand, including `--version` and `-h/--help`. Other README sections were left alone.\n\nHow verified: ran `python3 -m tally --help` and each subcommand's `--help` to capture exact usage text, matched the README prose to it, and ran `python3 -m unittest discover -s tests` (12 passed).\n\nLeft undone: nothing.",
+    "errors": [],
+    "warnings": [],
+    "turn_status": "completed",
+    "session_id": "sess_0bc98c6c"
+  },
+  "tests_before": {
+    "ok": true,
+    "summary": "Ran 12 tests in 0.008s \u00b7 OK",
+    "seconds": 0.1,
+    "tail": "$WORKTREE/tally/ledger.py:62: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).\n  when=when or datetime.utcnow(),\n............\n----------------------------------------------------------------------\nRan 12 tests in 0.008s\nOK"
+  },
+  "tests_after": {
+    "ok": true,
+    "summary": "Ran 12 tests in 0.015s \u00b7 OK",
+    "seconds": 0.1,
+    "tail": "$WORKTREE/tally/ledger.py:62: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).\n  when=when or datetime.utcnow(),\n............\n----------------------------------------------------------------------\nRan 12 tests in 0.015s\nOK"
+  },
+  "diff": {
+    "files": 1,
+    "added": 45,
+    "removed": 3,
+    "stat": " README.md | 48 +++++++++++++++++++++++++++++++++++++++++++++---\n 1 file changed, 45 insertions(+), 3 deletions(-)"
+  },
+  "acceptance": {
+    "ok": true,
+    "output": "ok   README section '## Install' left alone\nok   README section '## Development' left alone\nok   README section '## License' left alone\nok   README still has a Usage section\nok   the stale --category flag is gone\nok   could introspect the CLI parser\nok   Usage documents the `add` subcommand\nok   Usage documents `add --note`\nok   Usage documents `add --date`\nok   Usage documents the `list` subcommand\nok   Usage documents `list -n/--limit`\nok   Usage documents the `report` subcommand\nok   Usage documents `report --month`\nok   Usage documents the `export` subcommand\nok   Usage documents `export -o/--output`\nok   the repo's own test suite passes\n\nACCEPTED"
+  },
+  "verdict": "READY FOR REVIEW",
+  "ledger_total_usd": 0.271545
+}

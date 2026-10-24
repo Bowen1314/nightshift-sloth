@@ -1,0 +1,22 @@
+diff --git a/tally/ledger.py b/tally/ledger.py
+index 1642949..c030811 100644
+--- a/tally/ledger.py
++++ b/tally/ledger.py
+@@ -6,7 +6,7 @@
+ import json
+ import os
+ from dataclasses import dataclass
+-from datetime import datetime
++from datetime import datetime, timezone
+ from decimal import Decimal
+ from pathlib import Path
+ 
+@@ -59,7 +59,7 @@ def save(entries: list[Entry], path: Path | None = None) -> None:
+ 
+ def add(amount: Decimal, category: str, note: str = "", when: datetime | None = None, path: Path | None = None) -> Entry:
+     entry = Entry(
+-        when=when or datetime.utcnow(),
++        when=when or datetime.now(timezone.utc),
+         amount=amount,
+         category=category.strip().lower(),
+         note=note.strip(),

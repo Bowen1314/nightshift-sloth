@@ -1,0 +1,52 @@
+diff --git a/tally/report.py b/tally/report.py
+index f7ca91e..964382c 100644
+--- a/tally/report.py
++++ b/tally/report.py
+@@ -21,10 +21,22 @@ def calcualte_totals(entries: list[Entry]) -> dict[str, Decimal]:
+ 
+ 
+ def render(entries: list[Entry], month: str | None = None) -> str:
++    """Render a human‑readable report.
++
++    If ``entries`` is empty (either because the ledger has no entries or the
++    ``--month`` filter matches nothing) we now return a short message instead of
++    raising ``ZeroDivisionError`` when computing the average.
++    """
++    # Filter and sort the entries for the requested month.
+     entries = sorted(entries_for_month(entries, month), key=lambda e: e.when)
++
++    # Guard against an empty result set.
++    if not entries:
++        return "No entries yet."
++
+     totals = calcualte_totals(entries)
+     grand = sum(totals.values(), Decimal("0"))
+-    # TODO: blows up with a traceback on a fresh install (empty ledger).
++    # ``len(entries)`` is guaranteed > 0 here.
+     average = (grand / len(entries)).quantize(CENT)
+     width = max(len(category) for category in totals)
+     lines = [f"tallyho report: {month or 'all time'}", ""]
+diff --git a/tests/test_report_empty.py b/tests/test_report_empty.py
+new file mode 100644
+index 0000000..9cf5e89
+--- /dev/null
++++ b/tests/test_report_empty.py
+@@ -0,0 +1,18 @@
++import unittest
++
++from tally.report import render
++
++
++class ReportEmptyTest(unittest.TestCase):
++    def test_render_no_entries(self):
++        # When there are no entries at all, the report should be a short
++        # message instead of raising an exception.
++        self.assertEqual(render([], None), "No entries yet.")
++
++    def test_render_no_entries_month(self):
++        # The same behaviour applies when a month filter yields no results.
++        self.assertEqual(render([], "2026-10"), "No entries yet.")
++
++
++if __name__ == "__main__":
++    unittest.main()

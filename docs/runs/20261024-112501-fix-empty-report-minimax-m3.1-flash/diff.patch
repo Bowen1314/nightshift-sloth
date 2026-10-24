@@ -1,0 +1,38 @@
+diff --git a/tally/report.py b/tally/report.py
+index f7ca91e..b786486 100644
+--- a/tally/report.py
++++ b/tally/report.py
+@@ -22,9 +22,10 @@ def calcualte_totals(entries: list[Entry]) -> dict[str, Decimal]:
+ 
+ def render(entries: list[Entry], month: str | None = None) -> str:
+     entries = sorted(entries_for_month(entries, month), key=lambda e: e.when)
++    if not entries:
++        return "No entries yet."
+     totals = calcualte_totals(entries)
+     grand = sum(totals.values(), Decimal("0"))
+-    # TODO: blows up with a traceback on a fresh install (empty ledger).
+     average = (grand / len(entries)).quantize(CENT)
+     width = max(len(category) for category in totals)
+     lines = [f"tallyho report: {month or 'all time'}", ""]
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 6d82bca..62a9211 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -33,6 +33,17 @@ class CliTest(unittest.TestCase):
+         self.assertIn("$1,200.00", text)
+         self.assertIn("2 entries", text)
+ 
++    def test_report_with_empty_ledger(self):
++        code, text = self.run_cli("report")
++        self.assertEqual(code, 0)
++        self.assertEqual(text.strip(), "No entries yet.")
++
++    def test_report_with_no_matching_month(self):
++        self.run_cli("add", "4.50", "coffee", "--date", "2026-10-01")
++        code, text = self.run_cli("report", "--month", "2026-11")
++        self.assertEqual(code, 0)
++        self.assertEqual(text.strip(), "No entries yet.")
++
+     def test_bad_amount_is_rejected(self):
+         with contextlib.redirect_stderr(io.StringIO()):
+             self.assertEqual(self.run_cli("add", "lots", "coffee")[0], 2)

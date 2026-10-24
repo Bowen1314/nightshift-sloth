@@ -1,0 +1,35 @@
+diff --git a/README.md b/README.md
+index 35b7dd2..956df2b 100644
+--- a/README.md
++++ b/README.md
+@@ -12,10 +12,27 @@ Or run it straight from a checkout with `python -m tally`.
+ 
+ ## Usage
+ 
++The command line interface provides four subcommands. The top‑level help shows the
++overall usage and available commands:
++
++```sh
++tally [-h] [--version] {add,list,report,export} ...
++```
++
++Each subcommand has its own options, as displayed by `python -m tally <subcommand> --help`:
++
+ ```sh
+-tally add 4.50 --category coffee
+-tally list
+-tally report
++# Record an expense (or refund) – `add`
++tally add AMOUNT CATEGORY [--note NOTE] [--date DATE]
++
++# Show the most recent entries – `list`
++tally list [--limit LIMIT]
++
++# Show totals by category – `report`
++tally report [--month MONTH]
++
++# Export all entries as CSV – `export`
++tally export [--output OUTPUT]
+ ```
+ 
+ Entries live in `~/.tallyho.json`. Set `TALLY_FILE` to use a different file.

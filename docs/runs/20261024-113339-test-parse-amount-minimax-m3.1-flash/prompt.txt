@@ -1,0 +1,15 @@
+You are working the night shift on this repository. Do exactly one chore, then stop.
+
+Chore `test-parse-amount`:
+`tally.money.parse_amount()` has no tests (see the TODO). Add unit tests to
+`tests/test_money.py` covering plain amounts (`4.50`), a leading `$`, thousands separators (`1,234.56`), surrounding
+whitespace, negative refunds (`-12.00`, `-$3`), and invalid input raising `ValueError`. Do not change how
+`parse_amount` behaves.
+
+Ground rules:
+- Your time budget is 600 seconds and it is enforced: you will be stopped, so leave the code working at every step.
+- Keep the change small and focused on this chore. Do not refactor or reformat unrelated code.
+- Before you finish, run the test suite with `python3 -m unittest discover -s tests` and make sure it passes.
+- Do not commit, push, create branches or change git config. A human reviews your diff in the morning.
+- Do not install packages and do not use the network.
+- Finish with a short plain-text summary: what you changed, how you verified it, and anything you left undone.

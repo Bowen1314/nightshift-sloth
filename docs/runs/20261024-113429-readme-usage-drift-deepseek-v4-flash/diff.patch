@@ -1,0 +1,62 @@
+diff --git a/README.md b/README.md
+index 35b7dd2..cd44243 100644
+--- a/README.md
++++ b/README.md
+@@ -12,12 +12,54 @@ Or run it straight from a checkout with `python -m tally`.
+ 
+ ## Usage
+ 
++Run `tally <command>` (or `python -m tally <command>`) followed by any options.
++
+ ```sh
+-tally add 4.50 --category coffee
+-tally list
+-tally report
++tally add 4.50 coffee --note "morning flat white"
++tally list --limit 5
++tally report --month 2026-10
++tally export -o entries.csv
++```
++
++### Global options
++
++`tally --help` prints usage. `tally --version` prints the version.
++
++### `tally add` — record an expense (negative amount = refund)
++
++```
++usage: tally add [-h] [--note NOTE] [--date DATE] amount category
++```
++
++- `amount` — e.g. `4.50`, `"$4.50"`, `1,234.56` or `-12`
++- `category` — e.g. `coffee`, `groceries`, `rent`
++- `--note NOTE` — free-text note
++- `--date DATE` — `YYYY-MM-DD` (default: now)
++
++### `tally list` — show the most recent entries
++
++```
++usage: tally list [-h] [-n LIMIT]
+ ```
+ 
++- `-n, --limit LIMIT` — how many entries (default: 10)
++
++### `tally report` — totals by category
++
++```
++usage: tally report [-h] [--month MONTH]
++```
++
++- `--month MONTH` — only this month, `YYYY-MM`
++
++### `tally export` — write all entries as CSV
++
++```
++usage: tally export [-h] [-o OUTPUT]
++```
++
++- `-o, --output OUTPUT` — file to write (default: stdout)
++
+ Entries live in `~/.tallyho.json`. Set `TALLY_FILE` to use a different file.
+ 
+ ## Development

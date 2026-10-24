@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import collections
+import os
 import shutil
 import subprocess
 import sys
@@ -24,7 +25,7 @@ def _common(p: argparse.ArgumentParser) -> None:
     p.add_argument("--config", default=str(ROOT / "nightshift.toml"), help="nightshift.toml (default: the one next to this package)")
     p.add_argument("--key-file", help="dotenv-style file holding the provider key (default: read it from the environment)")
     p.add_argument("--out", help="where morning reports go (default: <state>/reports)")
-    p.add_argument("--ledger", help="spend ledger JSONL (default: <state>/ledger.jsonl)")
+    p.add_argument("--ledger", default=os.environ.get("NIGHTSHIFT_LEDGER"), help="spend ledger JSONL (default: $NIGHTSHIFT_LEDGER or <state>/ledger.jsonl)")
 
 
 def _setup(args):

@@ -1,0 +1,146 @@
+diff --git a/tally/cli.py b/tally/cli.py
+index 6924e6c..919666d 100644
+--- a/tally/cli.py
++++ b/tally/cli.py
+@@ -63,7 +63,7 @@ def main(argv: list[str] | None = None) -> int:
+         try:
+             writer = csv.writer(out)
+             writer.writerow(["when", "amount", "category", "note"])
+-            for e in sorted(entries, key=lambda e: e.when):
++            for e in sorted(entries, key=lambda e: ledger.as_utc(e.when)):
+                 writer.writerow([e.when.isoformat(timespec="seconds"), str(e.amount), e.category, e.note])
+         finally:
+             if args.output:
+diff --git a/tally/ledger.py b/tally/ledger.py
+index 1642949..7d8b82a 100644
+--- a/tally/ledger.py
++++ b/tally/ledger.py
+@@ -6,7 +6,7 @@
+ import json
+ import os
+ from dataclasses import dataclass
+-from datetime import datetime
++from datetime import datetime, timezone
+ from decimal import Decimal
+ from pathlib import Path
+ 
+@@ -59,7 +59,7 @@ def save(entries: list[Entry], path: Path | None = None) -> None:
+ 
+ def add(amount: Decimal, category: str, note: str = "", when: datetime | None = None, path: Path | None = None) -> Entry:
+     entry = Entry(
+-        when=when or datetime.utcnow(),
++        when=when or datetime.now(timezone.utc),
+         amount=amount,
+         category=category.strip().lower(),
+         note=note.strip(),
+@@ -70,5 +70,11 @@ def add(amount: Decimal, category: str, note: str = "", when: datetime | None =
+     return entry
+ 
+ 
++def as_utc(when: datetime) -> datetime:
++    if when.tzinfo is None:
++        return when.replace(tzinfo=timezone.utc)
++    return when.astimezone(timezone.utc)
++
++
+ def recent(entries: list[Entry], limit: int = 10) -> list[Entry]:
+-    return sorted(entries, key=lambda e: e.when, reverse=True)[:limit]
++    return sorted(entries, key=lambda e: as_utc(e.when), reverse=True)[:limit]
+diff --git a/tally/report.py b/tally/report.py
+index f7ca91e..b83c409 100644
+--- a/tally/report.py
++++ b/tally/report.py
+@@ -2,7 +2,7 @@
+ 
+ from decimal import Decimal
+ 
+-from .ledger import Entry
++from .ledger import Entry, as_utc
+ from .money import CENT, format_amount
+ 
+ 
+@@ -21,7 +21,7 @@ def calcualte_totals(entries: list[Entry]) -> dict[str, Decimal]:
+ 
+ 
+ def render(entries: list[Entry], month: str | None = None) -> str:
+-    entries = sorted(entries_for_month(entries, month), key=lambda e: e.when)
++    entries = sorted(entries_for_month(entries, month), key=lambda e: as_utc(e.when))
+     totals = calcualte_totals(entries)
+     grand = sum(totals.values(), Decimal("0"))
+     # TODO: blows up with a traceback on a fresh install (empty ledger).
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 6d82bca..8597878 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -1,5 +1,6 @@
+ import contextlib
+ import io
++import json
+ import os
+ import tempfile
+ import unittest
+@@ -44,6 +45,20 @@ class CliTest(unittest.TestCase):
+         self.assertEqual(text.splitlines()[0], "when,amount,category,note")
+         self.assertIn("2026-10-01T00:00:00,4.50,coffee,", text)
+ 
++    def test_legacy_and_aware_entries_work_together(self):
++        path = Path(os.environ["TALLY_FILE"])
++        path.write_text(json.dumps([
++            {"when": "2026-09-01T08:15:00", "amount": "1", "category": "old", "note": ""},
++            {"when": "2026-10-24T12:00:00+00:00", "amount": "2", "category": "new", "note": ""},
++        ]))
++
++        self.assertEqual(self.run_cli("list")[0], 0)
++        self.assertEqual(self.run_cli("report")[0], 0)
++        code, text = self.run_cli("export")
++        self.assertEqual(code, 0)
++        self.assertEqual(text.splitlines()[1], "2026-09-01T08:15:00,1,old,")
++        self.assertEqual(text.splitlines()[2], "2026-10-24T12:00:00+00:00,2,new,")
++
+ 
+ if __name__ == "__main__":
+     unittest.main()
+diff --git a/tests/test_ledger.py b/tests/test_ledger.py
+index aa56b7c..aad2432 100644
+--- a/tests/test_ledger.py
++++ b/tests/test_ledger.py
+@@ -1,7 +1,7 @@
+ import os
+ import tempfile
+ import unittest
+-from datetime import datetime
++from datetime import datetime, timezone
+ from decimal import Decimal
+ from pathlib import Path
+ 
+@@ -33,6 +33,30 @@ class LedgerTest(unittest.TestCase):
+         days = [e.when.day for e in ledger.recent(ledger.load(self.path), 2)]
+         self.assertEqual(days, [3, 2])
+ 
++    def test_add_uses_aware_utc_timestamp(self):
++        entry = ledger.add(Decimal("1"), "x", path=self.path)
++        self.assertEqual(entry.when.tzinfo, timezone.utc)
++        self.assertEqual(ledger.load(self.path)[0].when.tzinfo, timezone.utc)
++
++    def test_load_preserves_legacy_naive_timestamp(self):
++        self.path.write_text(
++            '[{"when":"2026-09-01T08:15:00","amount":"1","category":"x","note":""}]'
++        )
++        entry = ledger.load(self.path)[0]
++        self.assertEqual(entry.when, datetime(2026, 9, 1, 8, 15))
++        self.assertEqual(
++            ledger.as_utc(entry.when),
++            datetime(2026, 9, 1, 8, 15, tzinfo=timezone.utc),
++        )
++
++    def test_recent_sorts_mixed_naive_and_aware_timestamps(self):
++        self.path.write_text(
++            '[{"when":"2026-09-01T08:15:00","amount":"1","category":"old","note":""},'
++            '{"when":"2026-10-24T12:00:00+00:00","amount":"2","category":"new","note":""}]'
++        )
++        entries = ledger.recent(ledger.load(self.path))
++        self.assertEqual([e.category for e in entries], ["new", "old"])
++
+ 
+ if __name__ == "__main__":
+     unittest.main()

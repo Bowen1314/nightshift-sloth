@@ -1,0 +1,158 @@
+diff --git a/tally/ledger.py b/tally/ledger.py
+index 1642949..1c407af 100644
+--- a/tally/ledger.py
++++ b/tally/ledger.py
+@@ -6,13 +6,19 @@
+ import json
+ import os
+ from dataclasses import dataclass
+-from datetime import datetime
++from datetime import datetime, timezone
+ from decimal import Decimal
+ from pathlib import Path
+ 
+ DEFAULT_FILE = Path.home() / ".tallyho.json"
+ 
+ 
++def _as_utc(when: datetime) -> datetime:
++    if when.tzinfo is None:
++        return when.replace(tzinfo=timezone.utc)
++    return when.astimezone(timezone.utc)
++
++
+ def ledger_path() -> Path:
+     return Path(os.environ.get("TALLY_FILE", DEFAULT_FILE))
+ 
+@@ -26,7 +32,7 @@ class Entry:
+ 
+     def to_json(self) -> dict:
+         return {
+-            "when": self.when.isoformat(timespec="seconds"),
++            "when": _as_utc(self.when).isoformat(timespec="seconds"),
+             "amount": str(self.amount),
+             "category": self.category,
+             "note": self.note,
+@@ -35,7 +41,7 @@ class Entry:
+     @classmethod
+     def from_json(cls, data: dict) -> "Entry":
+         return cls(
+-            when=datetime.fromisoformat(data["when"]),
++            when=_as_utc(datetime.fromisoformat(data["when"])),
+             amount=Decimal(data["amount"]),
+             category=data["category"],
+             note=data.get("note", ""),
+@@ -59,7 +65,7 @@ def save(entries: list[Entry], path: Path | None = None) -> None:
+ 
+ def add(amount: Decimal, category: str, note: str = "", when: datetime | None = None, path: Path | None = None) -> Entry:
+     entry = Entry(
+-        when=when or datetime.utcnow(),
++        when=_as_utc(when) if when is not None else datetime.now(timezone.utc),
+         amount=amount,
+         category=category.strip().lower(),
+         note=note.strip(),
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 6d82bca..101396f 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -1,5 +1,6 @@
+ import contextlib
+ import io
++import json
+ import os
+ import tempfile
+ import unittest
+@@ -33,6 +34,39 @@ class CliTest(unittest.TestCase):
+         self.assertIn("$1,200.00", text)
+         self.assertIn("2 entries", text)
+ 
++    def test_mixed_legacy_and_aware_entries_work(self):
++        path = Path(os.environ["TALLY_FILE"])
++        path.write_text(json.dumps([
++            {
++                "when": "2026-09-01T08:15:00",
++                "amount": "1.00",
++                "category": "legacy",
++                "note": "",
++            },
++            {
++                "when": "2026-10-01T08:15:00+00:00",
++                "amount": "2.00",
++                "category": "current",
++                "note": "",
++            },
++        ]))
++
++        code, text = self.run_cli("list")
++        self.assertEqual(code, 0)
++        self.assertIn("2026-10-01", text)
++        self.assertIn("2026-09-01", text)
++
++        code, text = self.run_cli("report")
++        self.assertEqual(code, 0)
++        self.assertIn("$1.00", text)
++        self.assertIn("$2.00", text)
++        self.assertIn("2 entries", text)
++
++        code, text = self.run_cli("export")
++        self.assertEqual(code, 0)
++        self.assertIn("2026-09-01T08:15:00+00:00,1.00,legacy,", text)
++        self.assertIn("2026-10-01T08:15:00+00:00,2.00,current,", text)
++
+     def test_bad_amount_is_rejected(self):
+         with contextlib.redirect_stderr(io.StringIO()):
+             self.assertEqual(self.run_cli("add", "lots", "coffee")[0], 2)
+@@ -42,7 +76,7 @@ class CliTest(unittest.TestCase):
+         code, text = self.run_cli("export")
+         self.assertEqual(code, 0)
+         self.assertEqual(text.splitlines()[0], "when,amount,category,note")
+-        self.assertIn("2026-10-01T00:00:00,4.50,coffee,", text)
++        self.assertIn("2026-10-01T00:00:00+00:00,4.50,coffee,", text)
+ 
+ 
+ if __name__ == "__main__":
+diff --git a/tests/test_ledger.py b/tests/test_ledger.py
+index aa56b7c..45326a7 100644
+--- a/tests/test_ledger.py
++++ b/tests/test_ledger.py
+@@ -1,7 +1,9 @@
++import json
+ import os
+ import tempfile
+ import unittest
+-from datetime import datetime
++import warnings
++from datetime import datetime, timedelta, timezone
+ from decimal import Decimal
+ from pathlib import Path
+ 
+@@ -19,6 +21,30 @@ class LedgerTest(unittest.TestCase):
+     def test_missing_file_is_empty(self):
+         self.assertEqual(ledger.load(self.path), [])
+ 
++    def test_add_uses_timezone_aware_utc(self):
++        with warnings.catch_warnings(record=True) as caught:
++            warnings.simplefilter("always")
++            entry = ledger.add(Decimal("4.50"), "coffee", path=self.path)
++
++        self.assertEqual(entry.when.utcoffset(), timedelta(0))
++        self.assertEqual(entry.when.tzinfo, timezone.utc)
++        self.assertFalse(any(issubclass(item.category, DeprecationWarning) for item in caught))
++        data = json.loads(self.path.read_text())
++        self.assertEqual(data[0]["when"], entry.when.isoformat(timespec="seconds"))
++        self.assertTrue(data[0]["when"].endswith("+00:00"))
++
++    def test_load_accepts_naive_timestamp_as_utc(self):
++        self.path.write_text(json.dumps([{
++            "when": "2026-09-01T08:15:00",
++            "amount": "4.50",
++            "category": "coffee",
++            "note": "",
++        }]))
++
++        entries = ledger.load(self.path)
++
++        self.assertEqual(entries[0].when, datetime(2026, 9, 1, 8, 15, tzinfo=timezone.utc))
++
+     def test_add_then_load_roundtrip(self):
+         ledger.add(Decimal("4.50"), " Coffee ", note="flat white", path=self.path)
+         ledger.add(Decimal("-2.00"), "coffee", note="refund", path=self.path)
